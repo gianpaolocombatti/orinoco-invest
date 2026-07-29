@@ -213,3 +213,4 @@ Configurar en el dashboard de Vercel:
 ## Licencia
 
 Privado - Todos los derechos reservados.
+
