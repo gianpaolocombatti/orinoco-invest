@@ -205,13 +205,14 @@ export default function RegistroPage() {
 
       // Register user
       await register({
-        nombre: formData.firstName,
-        apellido: formData.lastName,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
         email: formData.email,
         password: formData.password,
-        cédula: formData.ciPassport,
-        teléfono: formData.phone,
-      });
+        ciPassport: formData.ciPassport,
+        dateOfBirth: formData.dateOfBirth,
+        phone: formData.phone,
+      } as any);
 
       // TODO: POST risk assessment to backend
       // await fetch('/api/evaluacion', {
