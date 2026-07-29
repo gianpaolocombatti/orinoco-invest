@@ -214,6 +214,11 @@ export default function DashboardPage() {
         if (portfolioResponse.ok) {
           const portfolioData = await portfolioResponse.json();
           setPortfolio(portfolioData.data);
+        } else if (portfolioResponse.status === 404) {
+          // No portfolio yet — send the user through risk assessment so one
+          // gets auto-selected for them instead of rendering a blank/mismatched state.
+          router.push('/evaluacion');
+          return;
         }
 
         // Fetch recent transactions
@@ -317,7 +322,7 @@ export default function DashboardPage() {
 
   const allocationPercentages = Object.entries(allocationByClass).map(([key, value]) => ({
     name: key,
-    value: Math.round((value / totalValue) * 100),
+    value: totalValue > 0 ? Math.round((value / totalValue) * 100) : 0,
     amount: value,
     color: ALLOCATION_COLORS[key as keyof typeof ALLOCATION_COLORS] || '#6b7280',
   }));
@@ -512,7 +517,7 @@ export default function DashboardPage() {
                   </div>
 
                   <div className="text-xs text-surface-500">
-                    {((holding.currentValue / totalValue) * 100).toFixed(1)}% de portafolio
+                    {totalValue > 0 ? ((holding.currentValue / totalValue) * 100).toFixed(1) : '0.0'}% de portafolio
                   </div>
                 </div>
               </Card>

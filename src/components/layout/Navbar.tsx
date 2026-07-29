@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 
 const Navbar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const pathname = usePathname();
   const { user, logout } = useAuth();
 
@@ -17,6 +18,14 @@ const Navbar: React.FC = () => {
 
   const closeMenu = () => {
     setIsOpen(false);
+  };
+
+  const toggleProfileMenu = () => {
+    setIsProfileMenuOpen((prev) => !prev);
+  };
+
+  const closeProfileMenu = () => {
+    setIsProfileMenuOpen(false);
   };
 
   const isActive = (path: string) => pathname === path;
@@ -29,6 +38,7 @@ const Navbar: React.FC = () => {
   const handleLogout = async () => {
     await logout();
     closeMenu();
+    closeProfileMenu();
   };
 
   return (
@@ -141,10 +151,39 @@ const Navbar: React.FC = () => {
           {/* User Avatar / Hamburger Menu */}
           <div className="flex items-center gap-4">
             {user && (
-              <div className="hidden md:flex items-center gap-2">
-                <div className="w-10 h-10 rounded-full gradient-primary text-white flex items-center justify-center font-bold text-sm">
+              <div className="hidden md:block relative">
+                <button
+                  onClick={toggleProfileMenu}
+                  className="w-10 h-10 rounded-full gradient-primary text-white flex items-center justify-center font-bold text-sm"
+                  aria-label="Menú de usuario"
+                  aria-expanded={isProfileMenuOpen}
+                >
                   {getInitials()}
-                </div>
+                </button>
+
+                {isProfileMenuOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-surface-200 py-2 z-50">
+                    <div className="px-4 py-2 border-b border-surface-200">
+                      <p className="font-semibold text-surface-900 text-sm truncate">
+                        {user.nombre} {user.apellido}
+                      </p>
+                      <p className="text-xs text-surface-500 truncate">{user.email}</p>
+                    </div>
+                    <Link
+                      href="/perfil"
+                      onClick={closeProfileMenu}
+                      className="block px-4 py-2 text-sm text-surface-600 hover:bg-surface-50 hover:text-brand-primary transition-colors"
+                    >
+                      Perfil
+                    </Link>
+                    <button
+                      onClick={handleLogout}
+                      className="w-full text-left px-4 py-2 text-sm text-danger hover:bg-red-50 transition-colors font-medium"
+                    >
+                      Cerrar Sesión
+                    </button>
+                  </div>
+                )}
               </div>
             )}
 
@@ -270,6 +309,11 @@ const Navbar: React.FC = () => {
           className="md:hidden fixed inset-0 top-16 z-30 bg-black bg-opacity-30"
           onClick={closeMenu}
         />
+      )}
+
+      {/* Profile menu backdrop */}
+      {isProfileMenuOpen && (
+        <div className="hidden md:block fixed inset-0 z-40" onClick={closeProfileMenu} />
       )}
     </>
   );
