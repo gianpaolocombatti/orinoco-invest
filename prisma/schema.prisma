@@ -1,0 +1,253 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ─── Usuarios ───────────────────────────────────────────────────────────────
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  phone         String?  @unique
+  passwordHash  String   @map("password_hash")
+  firstName     String   @map("first_name")
+  lastName      String   @map("last_name")
+  ciPassport    String   @map("ci_passport")
+  dateOfBirth   DateTime @map("date_of_birth")
+  country       String   @default("VE")
+
+  // Resultado de evaluación de riesgo
+  riskTolerance    RiskTolerance? @map("risk_tolerance")
+  investTimeline   InvestTimeline? @map("invest_timeline")
+  volatilityComfort VolatilityComfort? @map("volatility_comfort")
+  investExperience InvestExperience? @map("invest_experience")
+
+  // Estado de onboarding
+  onboardingComplete Boolean @default(false) @map("onboarding_complete")
+  tosAccepted        Boolean @default(false) @map("tos_accepted")
+  tosAcceptedAt      DateTime? @map("tos_accepted_at")
+
+  // Métodos de financiamiento
+  fundingMethods FundingMethod[]
+
+  // Relaciones
+  portfolio    Portfolio?
+  deposits     Deposit[]
+  withdrawals  Withdrawal[]
+  transactions Transaction[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("users")
+}
+
+// ─── Métodos de financiamiento ──────────────────────────────────────────────
+
+model FundingMethod {
+  id     String            @id @default(cuid())
+  userId String            @map("user_id")
+  type   FundingMethodType
+  label  String            // Ej: "Binance Wallet", "Zelle - BofA"
+  details String           // Datos de la cuenta (encriptados en producción)
+  isDefault Boolean        @default(false) @map("is_default")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("funding_methods")
+}
+
+// ─── Portafolios ────────────────────────────────────────────────────────────
+
+model Portfolio {
+  id             String        @id @default(cuid())
+  userId         String        @unique @map("user_id")
+  portfolioType  PortfolioType @map("portfolio_type")
+  totalValueUsd  Float         @default(0) @map("total_value_usd")
+  totalCostBasis Float         @default(0) @map("total_cost_basis")
+  lastRebalanced DateTime?     @map("last_rebalanced")
+
+  // Alpaca
+  alpacaAccountId String? @map("alpaca_account_id")
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  holdings Holding[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("portfolios")
+}
+
+model Holding {
+  id          String @id @default(cuid())
+  portfolioId String @map("portfolio_id")
+  assetSymbol String @map("asset_symbol")
+  assetName   String @map("asset_name")
+  assetClass  AssetClass @map("asset_class")
+  shares      Float  @default(0)
+  costBasis   Float  @default(0) @map("cost_basis")
+  currentPrice Float @default(0) @map("current_price")
+  currentValue Float @default(0) @map("current_value")
+
+  portfolio Portfolio @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([portfolioId, assetSymbol])
+  @@map("holdings")
+}
+
+// ─── Depósitos ──────────────────────────────────────────────────────────────
+
+model Deposit {
+  id        String        @id @default(cuid())
+  userId    String        @map("user_id")
+  amountUsd Float         @map("amount_usd")
+  fee       Float         @default(0)
+  netAmount Float         @map("net_amount")
+  status    DepositStatus @default(PENDING)
+  method    String        // Ej: "crypto_btc", "zelle", "paypal"
+  reference String?       // Referencia del pago externo
+  notes     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime  @default(now()) @map("created_at")
+  confirmedAt DateTime? @map("confirmed_at")
+
+  @@index([userId, status])
+  @@map("deposits")
+}
+
+// ─── Retiros ────────────────────────────────────────────────────────────────
+
+model Withdrawal {
+  id          String           @id @default(cuid())
+  userId      String           @map("user_id")
+  amountUsd   Float            @map("amount_usd")
+  fee         Float            @default(0)
+  netAmount   Float            @map("net_amount")
+  status      WithdrawalStatus @default(PENDING)
+  destination String           // Dirección/cuenta destino
+  method      String
+  notes       String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt    DateTime  @default(now()) @map("created_at")
+  processedAt  DateTime? @map("processed_at")
+
+  @@index([userId, status])
+  @@map("withdrawals")
+}
+
+// ─── Transacciones ──────────────────────────────────────────────────────────
+
+model Transaction {
+  id          String          @id @default(cuid())
+  userId      String          @map("user_id")
+  type        TransactionType
+  amountUsd   Float           @map("amount_usd")
+  asset       String?         // Símbolo del activo
+  shares      Float?
+  pricePerShare Float?        @map("price_per_share")
+  description String?
+  status      TransactionStatus @default(COMPLETED)
+
+  // Referencia a Alpaca
+  alpacaOrderId String? @map("alpaca_order_id")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([userId, createdAt])
+  @@map("transactions")
+}
+
+// ─── Enums ──────────────────────────────────────────────────────────────────
+
+enum RiskTolerance {
+  CONSERVADOR
+  MODERADO
+  AGRESIVO
+}
+
+enum InvestTimeline {
+  CORTO_PLAZO
+  MEDIANO_PLAZO
+  LARGO_PLAZO
+}
+
+enum VolatilityComfort {
+  CONSERVADOR
+  MODERADO
+  AGRESIVO
+}
+
+enum InvestExperience {
+  NINGUNA
+  ALGO
+  MUCHA
+}
+
+enum PortfolioType {
+  CONSERVADOR
+  BALANCEADO
+  CRECIMIENTO
+}
+
+enum AssetClass {
+  BONDS
+  STOCKS
+  GOLD
+}
+
+enum FundingMethodType {
+  CRYPTO
+  ZELLE
+  PAYPAL
+  BANK_TRANSFER
+  OTHER
+}
+
+enum DepositStatus {
+  PENDING
+  PROCESSING
+  CONFIRMED
+  FAILED
+  CANCELLED
+}
+
+enum WithdrawalStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum TransactionType {
+  DEPOSIT
+  WITHDRAWAL
+  BUY
+  SELL
+  REBALANCE
+  FEE
+  DIVIDEND
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
