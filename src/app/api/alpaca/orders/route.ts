@@ -154,7 +154,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
       // Parse filled quantity and price from Alpaca response
       const filledQty = order.filled_qty || 0;
       const filledPrice = order.filled_avg_price
-        ? parseFloat(order.filled_avg_price)
+        ? Number(order.filled_avg_price)
         : 0;
 
       try {

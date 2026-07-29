@@ -195,7 +195,7 @@ export default function DashboardPage() {
 
         if (!userResponse.ok) {
           if (userResponse.status === 401) {
-            router.push('/login');
+            router.push('/');
             return;
           }
           throw new Error('Error al cargar datos del usuario');
@@ -275,7 +275,7 @@ export default function DashboardPage() {
           <div className="text-center">
             <h2 className="text-xl font-semibold text-surface-900 mb-2">Error</h2>
             <p className="text-surface-600 mb-4">{error}</p>
-            <Button onClick={() => router.push('/login')} fullWidth>
+            <Button onClick={() => router.push('/')} fullWidth>
               Volver al login
             </Button>
           </div>
@@ -291,7 +291,7 @@ export default function DashboardPage() {
           <div className="text-center">
             <h2 className="text-xl font-semibold text-surface-900 mb-2">Sesión expirada</h2>
             <p className="text-surface-600 mb-4">Por favor inicia sesión nuevamente</p>
-            <Button onClick={() => router.push('/login')} fullWidth>
+            <Button onClick={() => router.push('/')} fullWidth>
               Ir a Login
             </Button>
           </div>

@@ -225,7 +225,7 @@ export default function RegistroPage() {
       //   }),
       // });
 
-      router.push('/dashboard');
+      router.push('/evaluacion');
     } catch (error: any) {
       setErrors({ submit: error?.message || 'Error al registrarse. Intenta de nuevo.' });
     } finally {
