@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { db } from '@/lib/db';
+import { db, withRetry } from '@/lib/db';
 import { getAuthUser } from '@/lib/auth';
 import { ASSET_MAP } from '@/lib/portfolio';
 
@@ -133,73 +133,77 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
     const body = await request.json();
     const validatedData: PortfolioRequest = portfolioSchema.parse(body);
 
-    // Check if portfolio already exists
-    let portfolio = await db.portfolio.findUnique({
-      where: { userId: authUser.userId },
-      include: { holdings: true },
-    });
+    // Run the find-then-create/update sequence in a single transaction so it
+    // executes over one pooled connection instead of several round trips —
+    // PgBouncer transaction-mode pooling (used in production) can drop or
+    // reassign the underlying connection between unwrapped sequential
+    // queries, which was intermittently leaving behind a portfolio with no
+    // holdings (or no portfolio at all) when a step failed mid-sequence.
+    const portfolio = await withRetry(() =>
+      db.$transaction(async (tx) => {
+        const existing = await tx.portfolio.findUnique({
+          where: { userId: authUser.userId },
+          include: { holdings: true },
+        });
 
-    if (portfolio) {
-      // Log warning if portfolio type is different
-      if (portfolio.portfolioType !== validatedData.portfolioType) {
-        console.warn(
-          `Usuario ${authUser.userId} está actualizando portafolio de ${portfolio.portfolioType} a ${validatedData.portfolioType}`
-        );
-      }
+        if (existing) {
+          if (existing.portfolioType !== validatedData.portfolioType) {
+            console.warn(
+              `Usuario ${authUser.userId} está actualizando portafolio de ${existing.portfolioType} a ${validatedData.portfolioType}`
+            );
+          }
 
-      // Update existing portfolio
-      portfolio = await db.portfolio.update({
-        where: { id: portfolio.id },
-        data: {
-          portfolioType: validatedData.portfolioType,
-          updatedAt: new Date(),
-        },
-        include: { holdings: true },
-      });
-    } else {
-      // Create new portfolio
-      portfolio = await db.portfolio.create({
-        data: {
-          userId: authUser.userId,
-          portfolioType: validatedData.portfolioType,
-          totalValueUsd: 0,
-          totalCostBasis: 0,
-        },
-        include: { holdings: true },
-      });
+          return tx.portfolio.update({
+            where: { id: existing.id },
+            data: {
+              portfolioType: validatedData.portfolioType,
+              updatedAt: new Date(),
+            },
+            include: { holdings: true },
+          });
+        }
 
-      // Create default empty holdings for each asset class
-      const assetClasses = ['BONDS', 'STOCKS', 'GOLD'];
-      const assetNames = {
-        BONDS: 'Vanguard Total Bond Market ETF',
-        STOCKS: 'Vanguard Total Stock Market ETF',
-        GOLD: 'SPDR Gold Shares ETF',
-      };
-
-      for (const assetClass of assetClasses) {
-        const symbol = ASSET_MAP[assetClass as keyof typeof ASSET_MAP];
-        const name = assetNames[assetClass as keyof typeof assetNames];
-
-        await db.holding.create({
+        const created = await tx.portfolio.create({
           data: {
-            portfolioId: portfolio.id,
-            assetSymbol: symbol,
-            assetName: name,
-            assetClass: assetClass as any,
-            shares: 0,
-            costBasis: 0,
-            currentPrice: 0,
-            currentValue: 0,
+            userId: authUser.userId,
+            portfolioType: validatedData.portfolioType,
+            totalValueUsd: 0,
+            totalCostBasis: 0,
           },
         });
-      }
 
-      // Fetch portfolio with holdings
-      portfolio = await db.portfolio.findUniqueOrThrow({
-        where: { id: portfolio.id },
-        include: { holdings: true },
-      });
-    }
+        // Create default empty holdings for each asset class
+        const assetClasses = ['BONDS', 'STOCKS', 'GOLD'];
+        const assetNames = {
+          BONDS: 'Vanguard Total Bond Market ETF',
+          STOCKS: 'Vanguard Total Stock Market ETF',
+          GOLD: 'SPDR Gold Shares ETF',
+        };
+
+        for (const assetClass of assetClasses) {
+          const symbol = ASSET_MAP[assetClass as keyof typeof ASSET_MAP];
+          const name = assetNames[assetClass as keyof typeof assetNames];
+
+          await tx.holding.create({
+            data: {
+              portfolioId: created.id,
+              assetSymbol: symbol,
+              assetName: name,
+              assetClass: assetClass as any,
+              shares: 0,
+              costBasis: 0,
+              currentPrice: 0,
+              currentValue: 0,
+            },
+          });
+        }
+
+        return tx.portfolio.findUniqueOrThrow({
+          where: { id: created.id },
+          include: { holdings: true },
+        });
+      })
+    );
 
     return NextResponse.json<ApiResponse>(
       {
@@ -281,13 +285,27 @@ export async function PUT(request: NextRequest): Promise<NextResponse<ApiRespons
     const body = await request.json();
     const validatedData: PortfolioRequest = portfolioSchema.parse(body);
 
-    // Get existing portfolio
-    const portfolio = await db.portfolio.findUnique({
-      where: { userId: authUser.userId },
-      include: { holdings: true },
+    const updatedPortfolio = await withRetry(async () => {
+      const portfolio = await db.portfolio.findUnique({
+        where: { userId: authUser.userId },
+      });
+
+      if (!portfolio) {
+        return null;
+      }
+
+      return db.portfolio.update({
+        where: { id: portfolio.id },
+        data: {
+          portfolioType: validatedData.portfolioType,
+          lastRebalanced: new Date(),
+          updatedAt: new Date(),
+        },
+        include: { holdings: true },
+      });
     });
 
-    if (!portfolio) {
+    if (!updatedPortfolio) {
       return NextResponse.json<ApiResponse>(
         {
           success: false,
@@ -296,17 +314,6 @@ export async function PUT(request: NextRequest): Promise<NextResponse<ApiRespons
         { status: 404 }
       );
     }
-
-    // Update portfolio
-    const updatedPortfolio = await db.portfolio.update({
-      where: { id: portfolio.id },
-      data: {
-        portfolioType: validatedData.portfolioType,
-        lastRebalanced: new Date(),
-        updatedAt: new Date(),
-      },
-      include: { holdings: true },
-    });
 
     return NextResponse.json<ApiResponse>(
       {
