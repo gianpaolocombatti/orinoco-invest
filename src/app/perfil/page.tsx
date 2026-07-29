@@ -14,7 +14,6 @@ interface UserProfile {
   nombre: string;
   apellido: string;
   cédula?: string;
-  pasaporte?: string;
   fechaNacimiento?: string;
   correo: string;
   teléfono?: string;
@@ -129,39 +128,59 @@ export default function PerfilPage() {
         }
 
         const data = await response.json();
+        const apiUser = data.data.user;
+        const apiPortfolio = data.data.portfolio;
         const profile: UserProfile = {
-          id: data.user.id,
-          nombre: data.user.nombre,
-          apellido: data.user.apellido,
-          cédula: data.user.cédula,
-          pasaporte: data.user.pasaporte,
-          fechaNacimiento: data.user.fechaNacimiento,
-          correo: data.user.email,
-          teléfono: data.user.teléfono,
-          toleranciaRiesgo: data.user.toleranciaRiesgo,
-          horizonteInversion: data.user.horizonteInversion,
-          experiencia: data.user.experiencia,
-          tipoPortafolio: data.user.tipoPortafolio,
+          id: apiUser.id,
+          nombre: apiUser.firstName,
+          apellido: apiUser.lastName,
+          cédula: apiUser.ciPassport,
+          fechaNacimiento: apiUser.dateOfBirth,
+          correo: apiUser.email,
+          teléfono: apiUser.phone || undefined,
+          toleranciaRiesgo: apiUser.riskTolerance || undefined,
+          horizonteInversion: apiUser.investTimeline || undefined,
+          experiencia: apiUser.investExperience || undefined,
+          tipoPortafolio: apiPortfolio?.portfolioType,
         };
 
         setUserProfile(profile);
         setPersonalData(profile);
 
         // Fetch account summary
-        const portfolioResponse = await fetch('/api/portafolio', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const [portfolioResponse, depositosResponse, retirosResponse] = await Promise.all([
+          fetch('/api/portafolio', { headers: { Authorization: `Bearer ${token}` } }),
+          fetch('/api/depositos?limit=100', { headers: { Authorization: `Bearer ${token}` } }),
+          fetch('/api/retiros?limit=100', { headers: { Authorization: `Bearer ${token}` } }),
+        ]);
 
         if (portfolioResponse.ok) {
           const portfolioData = await portfolioResponse.json();
+          const totalInvertido = portfolioData.data?.totalCostBasis || 0;
+          const valorActual = portfolioData.data?.totalValueUsd || 0;
+
+          let depositosTotales = 0;
+          if (depositosResponse.ok) {
+            const depositosData = await depositosResponse.json();
+            depositosTotales = (depositosData.data?.deposits || [])
+              .filter((d: { status: string }) => d.status === 'CONFIRMED')
+              .reduce((sum: number, d: { amountUsd: number }) => sum + d.amountUsd, 0);
+          }
+
+          let retirosTotales = 0;
+          if (retirosResponse.ok) {
+            const retirosData = await retirosResponse.json();
+            retirosTotales = (retirosData.data?.withdrawals || [])
+              .filter((w: { status: string }) => w.status === 'COMPLETED')
+              .reduce((sum: number, w: { amountUsd: number }) => sum + w.amountUsd, 0);
+          }
+
           setAccountSummary({
-            totalInvertido: portfolioData.totalCostBasis || 0,
-            valorActual: portfolioData.totalValue || 0,
-            gananciaPerdida: (portfolioData.totalValue || 0) - (portfolioData.totalCostBasis || 0),
-            depositosTotales: portfolioData.totalDeposits || 0,
-            retirosTotales: portfolioData.totalWithdrawals || 0,
+            totalInvertido,
+            valorActual,
+            gananciaPerdida: valorActual - totalInvertido,
+            depositosTotales,
+            retirosTotales,
           });
         }
       } catch (err) {
@@ -188,14 +207,28 @@ export default function PerfilPage() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(personalData),
+        body: JSON.stringify({
+          firstName: personalData.nombre,
+          lastName: personalData.apellido,
+          phone: personalData.teléfono,
+        }),
       });
 
       if (!response.ok) {
         throw new Error('Error al actualizar perfil');
       }
 
-      setUserProfile(personalData as UserProfile);
+      const data = await response.json();
+      const apiUser = data.data.user;
+      const updatedProfile: UserProfile = {
+        ...(userProfile as UserProfile),
+        nombre: apiUser.firstName,
+        apellido: apiUser.lastName,
+        teléfono: apiUser.phone || undefined,
+      };
+
+      setUserProfile(updatedProfile);
+      setPersonalData(updatedProfile);
       setEditingPersonal(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al guardar cambios');
@@ -298,7 +331,7 @@ export default function PerfilPage() {
                 <div>
                   <p className="text-sm text-surface-600">Cédula/Pasaporte</p>
                   <p className="text-base font-medium text-surface-900">
-                    {userProfile.cédula || userProfile.pasaporte || 'No especificado'}
+                    {userProfile.cédula || 'No especificado'}
                   </p>
                 </div>
                 <div>
@@ -349,7 +382,7 @@ export default function PerfilPage() {
                 />
                 <Input
                   label="Cédula/Pasaporte"
-                  value={personalData.cédula || personalData.pasaporte || ''}
+                  value={personalData.cédula || ''}
                   onChange={(e) =>
                     setPersonalData({ ...personalData, cédula: e.target.value })
                   }

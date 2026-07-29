@@ -1,4 +1,4 @@
-import { SignJWT, jwtVerify } from 'jose';
+import { SignJWT, jwtVerify, JWTPayload } from 'jose';
 import bcryptjs from 'bcryptjs';
 import { cookies } from 'next/headers';
 
@@ -9,7 +9,7 @@ const JWT_SECRET = new TextEncoder().encode(
 const TOKEN_EXPIRY = 7 * 24 * 60 * 60; // 7 days in seconds
 const COOKIE_NAME = 'orinoco_token';
 
-export interface AuthPayload {
+export interface AuthPayload extends JWTPayload {
   userId: string;
   email: string;
 }

@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/context/AuthContext';
@@ -20,7 +20,6 @@ export const metadata: Metadata = {
     apple: '/apple-touch-icon.png',
   },
   manifest: '/manifest.json',
-  themeColor: '#22c55e',
   openGraph: {
     title: 'Orinoco Invest - Ahorra en USD. Invierte automático.',
     description: 'Ahorra en USD. Invierte automático. Retira cuando quieras.',
@@ -33,6 +32,10 @@ export const metadata: Metadata = {
     title: 'Orinoco Invest - Ahorra en USD. Invierte automático.',
     description: 'Ahorra en USD. Invierte automático. Retira cuando quieras.',
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: '#22c55e',
 };
 
 export default function RootLayout({

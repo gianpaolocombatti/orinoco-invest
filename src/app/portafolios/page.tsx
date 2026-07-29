@@ -127,8 +127,8 @@ export default function PortafoliosPage() {
             Basado en tu evaluación, te recomendamos:{' '}
             <span className="font-semibold text-brand-primary">
               {recommendedPortfolio === 'CONSERVADOR' && 'Conservador'}
-              {recommendedPortfolio === 'MODERADO' && 'Moderado'}
-              {recommendedPortfolio === 'AGRESIVO' && 'Agresivo'}
+              {recommendedPortfolio === 'BALANCEADO' && 'Balanceado'}
+              {recommendedPortfolio === 'CRECIMIENTO' && 'Crecimiento'}
             </span>
           </p>
         </div>

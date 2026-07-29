@@ -168,13 +168,13 @@ export default function EvaluacionPage() {
 
       const token = localStorage.getItem('authToken');
       const response = await fetch('/api/portafolio', {
-        method: 'PUT',
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          tipoPortafolio: recommendedPortfolio,
+          portfolioType: recommendedPortfolio,
         }),
       });
 

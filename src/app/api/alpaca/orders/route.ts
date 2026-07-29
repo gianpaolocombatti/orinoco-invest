@@ -120,7 +120,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
     try {
       alpacaResult = await alpaca.executeInvestment(
         body.amount,
-        portfolio.portfolioType as 'CONSERVADOR' | 'MODERADO' | 'AGRESIVO'
+        portfolio.portfolioType
       );
     } catch (error) {
       const errorMsg =

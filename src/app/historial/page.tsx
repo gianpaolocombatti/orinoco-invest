@@ -16,7 +16,7 @@ interface Transaction {
   id: string;
   type: TransactionType;
   description: string;
-  amount: number;
+  amountUsd: number;
   status: TransactionStatus;
   createdAt: string;
 }
@@ -34,7 +34,7 @@ const MOCK_TRANSACTIONS: Transaction[] = [
     id: '1',
     type: 'BUY',
     description: 'Compra - VTI (25 acciones)',
-    amount: 250,
+    amountUsd: 250,
     status: 'COMPLETED',
     createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
   },
@@ -42,7 +42,7 @@ const MOCK_TRANSACTIONS: Transaction[] = [
     id: '2',
     type: 'BUY',
     description: 'Compra - BND (3.65 acciones)',
-    amount: 300,
+    amountUsd: 300,
     status: 'COMPLETED',
     createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
   },
@@ -50,7 +50,7 @@ const MOCK_TRANSACTIONS: Transaction[] = [
     id: '3',
     type: 'DEPOSIT',
     description: 'Depósito vía Bitcoin',
-    amount: 500,
+    amountUsd: 500,
     status: 'COMPLETED',
     createdAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString(),
   },
@@ -58,7 +58,7 @@ const MOCK_TRANSACTIONS: Transaction[] = [
     id: '4',
     type: 'BUY',
     description: 'Compra - GLD (2.52 acciones)',
-    amount: 500,
+    amountUsd: 500,
     status: 'COMPLETED',
     createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
   },
@@ -66,7 +66,7 @@ const MOCK_TRANSACTIONS: Transaction[] = [
     id: '5',
     type: 'WITHDRAWAL',
     description: 'Retiro a Zelle',
-    amount: 150,
+    amountUsd: 150,
     status: 'COMPLETED',
     createdAt: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000).toISOString(),
   },
@@ -74,7 +74,7 @@ const MOCK_TRANSACTIONS: Transaction[] = [
     id: '6',
     type: 'DEPOSIT',
     description: 'Depósito vía Zelle',
-    amount: 250,
+    amountUsd: 250,
     status: 'COMPLETED',
     createdAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
   },
@@ -82,7 +82,7 @@ const MOCK_TRANSACTIONS: Transaction[] = [
     id: '7',
     type: 'REBALANCE',
     description: 'Rebalanceo automático del portafolio',
-    amount: 0,
+    amountUsd: 0,
     status: 'COMPLETED',
     createdAt: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString(),
   },
@@ -90,7 +90,7 @@ const MOCK_TRANSACTIONS: Transaction[] = [
     id: '8',
     type: 'BUY',
     description: 'Compra - SPY (5 acciones)',
-    amount: 200,
+    amountUsd: 200,
     status: 'PENDING',
     createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
   },
@@ -98,7 +98,7 @@ const MOCK_TRANSACTIONS: Transaction[] = [
     id: '9',
     type: 'WITHDRAWAL',
     description: 'Retiro a PayPal',
-    amount: 100,
+    amountUsd: 100,
     status: 'FAILED',
     createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
   },
@@ -245,7 +245,7 @@ export default function HistoryPage() {
 
         if (response.ok) {
           const data = await response.json();
-          setTransactions(data.data || MOCK_TRANSACTIONS);
+          setTransactions(data.data?.transactions || MOCK_TRANSACTIONS);
         } else {
           setTransactions(MOCK_TRANSACTIONS);
         }
@@ -387,14 +387,14 @@ export default function HistoryPage() {
                     </div>
 
                     {/* Amount */}
-                    {transaction.amount > 0 && (
+                    {transaction.amountUsd > 0 && (
                       <div className="flex-shrink-0 text-right">
                         <p className={cn(
                           'text-sm font-semibold',
                           isNegative ? 'text-red-600' : 'text-green-600'
                         )}>
                           {isNegative ? '-' : '+'}
-                          {formatCurrency(transaction.amount)}
+                          {formatCurrency(transaction.amountUsd)}
                         </p>
                       </div>
                     )}

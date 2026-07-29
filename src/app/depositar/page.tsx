@@ -137,9 +137,7 @@ export default function DepositPage() {
         },
         body: JSON.stringify({
           amount: depositData.amount,
-          fee: depositData.fee,
           method: depositData.method,
-          reference: depositData.reference,
         }),
       });
 

@@ -152,10 +152,6 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
     let paymentAddress = '';
 
     switch (validatedData.method) {
-      case 'crypto_btc':
-        paymentAddress = PAYMENT_ADDRESSES.crypto_btc;
-        instructions = `Envía ${validatedData.amount} USD en BTC a la dirección: ${paymentAddress}`;
-        break;
       case 'crypto_usdt':
         paymentAddress = PAYMENT_ADDRESSES.crypto_usdt;
         instructions = `Envía ${validatedData.amount} USDT (TRC-20) a la dirección: ${paymentAddress}`;
@@ -165,6 +161,12 @@ export async function POST(request: NextRequest): Promise<NextResponse<ApiRespon
         break;
       case 'paypal':
         instructions = `Envía $${validatedData.amount} por PayPal a: pagos@orinoco-invest.com`;
+        break;
+      case 'bank_transfer':
+        instructions = `Envía $${validatedData.amount} por transferencia bancaria. Contacta a soporte@orinoco-invest.com para los datos de la cuenta.`;
+        break;
+      case 'bolivares_fx':
+        instructions = `Envía el equivalente en bolívares de $${validatedData.amount} USD. Contacta a soporte@orinoco-invest.com para la tasa y los datos de pago.`;
         break;
     }
 

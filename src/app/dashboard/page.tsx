@@ -202,7 +202,7 @@ export default function DashboardPage() {
         }
 
         const userData = await userResponse.json();
-        setUser(userData.user);
+        setUser(userData.data.user);
 
         // Fetch portfolio data
         const portfolioResponse = await fetch('/api/portafolio', {
@@ -225,7 +225,7 @@ export default function DashboardPage() {
 
         if (transactionsResponse.ok) {
           const transactionsData = await transactionsResponse.json();
-          setTransactions(transactionsData.data || MOCK_TRANSACTIONS);
+          setTransactions(transactionsData.data?.transactions || MOCK_TRANSACTIONS);
         } else {
           setTransactions(MOCK_TRANSACTIONS);
         }

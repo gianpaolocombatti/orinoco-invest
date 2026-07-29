@@ -14,18 +14,41 @@ export interface User {
   createdAt: string;
 }
 
+interface ApiUser {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  phone: string | null;
+  ciPassport: string;
+  createdAt: string;
+}
+
+function mapApiUser(apiUser: ApiUser): User {
+  return {
+    id: apiUser.id,
+    email: apiUser.email,
+    nombre: apiUser.firstName,
+    apellido: apiUser.lastName,
+    cédula: apiUser.ciPassport,
+    teléfono: apiUser.phone || undefined,
+    createdAt: apiUser.createdAt,
+  };
+}
+
 interface LoginCredentials {
   email: string;
   password: string;
 }
 
 interface RegisterData {
-  nombre: string;
-  apellido: string;
+  firstName: string;
+  lastName: string;
   email: string;
   password: string;
-  cédula?: string;
-  teléfono?: string;
+  ciPassport: string;
+  dateOfBirth: string;
+  phone?: string;
 }
 
 interface AuthContextType {
@@ -83,9 +106,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       const data = await response.json();
 
-      if (data.token) {
-        localStorage.setItem('authToken', data.token);
-        setUser(data.user);
+      if (data.data?.token) {
+        localStorage.setItem('authToken', data.data.token);
+        setUser(mapApiUser(data.data.user));
         router.push('/dashboard');
       }
     } catch (error) {
@@ -113,9 +136,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       const responseData = await response.json();
 
-      if (responseData.token) {
-        localStorage.setItem('authToken', responseData.token);
-        setUser(responseData.user);
+      if (responseData.data?.token) {
+        localStorage.setItem('authToken', responseData.data.token);
+        setUser(mapApiUser(responseData.data.user));
         router.push('/dashboard');
       }
     } catch (error) {
@@ -176,7 +199,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       const data = await response.json();
-      setUser(data.user);
+      setUser(mapApiUser(data.data.user));
     } catch (error) {
       console.error('Refresh user error:', error);
       localStorage.removeItem('authToken');

@@ -10,123 +10,138 @@
 /**
  * Risk tolerance levels for investment portfolios
  * Values match Prisma schema enum RiskTolerance
+ *
+ * Modeled as a const object + derived string-literal union (like Prisma's
+ * generated enums) rather than a TS `enum`, so plain string literals such as
+ * "CONSERVADOR" are structurally assignable without nominal-type friction.
  */
-export enum RiskTolerance {
-  CONSERVADOR = "CONSERVADOR",
-  MODERADO = "MODERADO",
-  AGRESIVO = "AGRESIVO",
-}
+export const RiskTolerance = {
+  CONSERVADOR: "CONSERVADOR",
+  MODERADO: "MODERADO",
+  AGRESIVO: "AGRESIVO",
+} as const;
+export type RiskTolerance = (typeof RiskTolerance)[keyof typeof RiskTolerance];
 
 /**
  * Investment timeline for portfolio recommendations
  * Values match Prisma schema enum InvestTimeline
  */
-export enum InvestTimeline {
-  CORTO_PLAZO = "CORTO_PLAZO",
-  MEDIANO_PLAZO = "MEDIANO_PLAZO",
-  LARGO_PLAZO = "LARGO_PLAZO",
-}
+export const InvestTimeline = {
+  CORTO_PLAZO: "CORTO_PLAZO",
+  MEDIANO_PLAZO: "MEDIANO_PLAZO",
+  LARGO_PLAZO: "LARGO_PLAZO",
+} as const;
+export type InvestTimeline = (typeof InvestTimeline)[keyof typeof InvestTimeline];
 
 /**
  * Comfort level with portfolio volatility
  * Values match Prisma schema enum VolatilityComfort
  */
-export enum VolatilityComfort {
-  CONSERVADOR = "CONSERVADOR",
-  MODERADO = "MODERADO",
-  AGRESIVO = "AGRESIVO",
-}
+export const VolatilityComfort = {
+  CONSERVADOR: "CONSERVADOR",
+  MODERADO: "MODERADO",
+  AGRESIVO: "AGRESIVO",
+} as const;
+export type VolatilityComfort = (typeof VolatilityComfort)[keyof typeof VolatilityComfort];
 
 /**
  * Investor experience level
  * Values match Prisma schema enum InvestExperience
  */
-export enum InvestExperience {
-  NINGUNA = "NINGUNA",
-  ALGO = "ALGO",
-  MUCHA = "MUCHA",
-}
+export const InvestExperience = {
+  NINGUNA: "NINGUNA",
+  ALGO: "ALGO",
+  MUCHA: "MUCHA",
+} as const;
+export type InvestExperience = (typeof InvestExperience)[keyof typeof InvestExperience];
 
 /**
  * Types of investment portfolios available
  * Values match Prisma schema enum PortfolioType
  */
-export enum PortfolioType {
-  CONSERVADOR = "CONSERVADOR",
-  BALANCEADO = "BALANCEADO",
-  CRECIMIENTO = "CRECIMIENTO",
-}
+export const PortfolioType = {
+  CONSERVADOR: "CONSERVADOR",
+  BALANCEADO: "BALANCEADO",
+  CRECIMIENTO: "CRECIMIENTO",
+} as const;
+export type PortfolioType = (typeof PortfolioType)[keyof typeof PortfolioType];
 
 /**
  * Asset class categorization
  * Values match Prisma schema enum AssetClass
  */
-export enum AssetClass {
-  BONDS = "BONDS",
-  STOCKS = "STOCKS",
-  GOLD = "GOLD",
-}
+export const AssetClass = {
+  BONDS: "BONDS",
+  STOCKS: "STOCKS",
+  GOLD: "GOLD",
+} as const;
+export type AssetClass = (typeof AssetClass)[keyof typeof AssetClass];
 
 /**
  * Status of deposits
  * Values match Prisma schema enum DepositStatus
  */
-export enum DepositStatus {
-  PENDING = "PENDING",
-  PROCESSING = "PROCESSING",
-  CONFIRMED = "CONFIRMED",
-  FAILED = "FAILED",
-  CANCELLED = "CANCELLED",
-}
+export const DepositStatus = {
+  PENDING: "PENDING",
+  PROCESSING: "PROCESSING",
+  CONFIRMED: "CONFIRMED",
+  FAILED: "FAILED",
+  CANCELLED: "CANCELLED",
+} as const;
+export type DepositStatus = (typeof DepositStatus)[keyof typeof DepositStatus];
 
 /**
  * Status of withdrawals
  * Values match Prisma schema enum WithdrawalStatus
  */
-export enum WithdrawalStatus {
-  PENDING = "PENDING",
-  PROCESSING = "PROCESSING",
-  COMPLETED = "COMPLETED",
-  FAILED = "FAILED",
-  CANCELLED = "CANCELLED",
-}
+export const WithdrawalStatus = {
+  PENDING: "PENDING",
+  PROCESSING: "PROCESSING",
+  COMPLETED: "COMPLETED",
+  FAILED: "FAILED",
+  CANCELLED: "CANCELLED",
+} as const;
+export type WithdrawalStatus = (typeof WithdrawalStatus)[keyof typeof WithdrawalStatus];
 
 /**
  * Types of transactions
  * Values match Prisma schema enum TransactionType
  */
-export enum TransactionType {
-  DEPOSIT = "DEPOSIT",
-  WITHDRAWAL = "WITHDRAWAL",
-  BUY = "BUY",
-  SELL = "SELL",
-  REBALANCE = "REBALANCE",
-  FEE = "FEE",
-  DIVIDEND = "DIVIDEND",
-}
+export const TransactionType = {
+  DEPOSIT: "DEPOSIT",
+  WITHDRAWAL: "WITHDRAWAL",
+  BUY: "BUY",
+  SELL: "SELL",
+  REBALANCE: "REBALANCE",
+  FEE: "FEE",
+  DIVIDEND: "DIVIDEND",
+} as const;
+export type TransactionType = (typeof TransactionType)[keyof typeof TransactionType];
 
 /**
  * Status of transactions
  * Values match Prisma schema enum TransactionStatus
  */
-export enum TransactionStatus {
-  PENDING = "PENDING",
-  COMPLETED = "COMPLETED",
-  FAILED = "FAILED",
-  CANCELLED = "CANCELLED",
-}
+export const TransactionStatus = {
+  PENDING: "PENDING",
+  COMPLETED: "COMPLETED",
+  FAILED: "FAILED",
+  CANCELLED: "CANCELLED",
+} as const;
+export type TransactionStatus = (typeof TransactionStatus)[keyof typeof TransactionStatus];
 
 /**
  * Methods for funding accounts
  * Values match Prisma schema enum FundingMethodType
  */
-export enum FundingMethodType {
-  CRYPTO = "CRYPTO",
-  ZELLE = "ZELLE",
-  PAYPAL = "PAYPAL",
-  BANK_TRANSFER = "BANK_TRANSFER",
-  OTHER = "OTHER",
-}
+export const FundingMethodType = {
+  CRYPTO: "CRYPTO",
+  ZELLE: "ZELLE",
+  PAYPAL: "PAYPAL",
+  BANK_TRANSFER: "BANK_TRANSFER",
+  OTHER: "OTHER",
+} as const;
+export type FundingMethodType = (typeof FundingMethodType)[keyof typeof FundingMethodType];
 
 /**
  * Type aliases used by portfolio.ts and other modules
@@ -643,10 +658,11 @@ export const ALLOCATION_THRESHOLDS = {
 /**
  * Subscription plans for Orinoco Invest
  */
-export enum SubscriptionPlan {
-  FREE = "FREE",
-  PLUS = "PLUS",
-}
+export const SubscriptionPlan = {
+  FREE: "FREE",
+  PLUS: "PLUS",
+} as const;
+export type SubscriptionPlan = (typeof SubscriptionPlan)[keyof typeof SubscriptionPlan];
 
 /**
  * Fee structure for different subscription plans

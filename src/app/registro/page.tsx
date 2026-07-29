@@ -212,7 +212,7 @@ export default function RegistroPage() {
         ciPassport: formData.ciPassport,
         dateOfBirth: formData.dateOfBirth,
         phone: formData.phone,
-      } as any);
+      });
 
       // TODO: POST risk assessment to backend
       // await fetch('/api/evaluacion', {
